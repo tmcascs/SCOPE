@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 75" width="220" height="75">
+  <!-- Sensor arc icon -->
+  <circle cx="28" cy="25" r="4" fill="#19a355"/>
+  <path d="M 18,25 A 10,10 0 0,1 38,25" stroke="#19a355" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <path d="M 11,25 A 17,17 0 0,1 45,25" stroke="#19a355" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M 4,25 A 24,24 0 0,1 52,25" stroke="#19a355" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <!-- SCOPE wordmark -->
+  <text x="62" y="35"
+        font-family="system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"
+        font-size="24" font-weight="700" fill="#111111" letter-spacing="1">SCOPE</text>
+  <!-- Subtitle line 1 -->
+  <text x="4" y="54"
+        font-family="system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"
+        font-size="9" fill="#666666">Sensor Coverage Optimisation</text>
+  <!-- Subtitle line 2 -->
+  <text x="4" y="68"
+        font-family="system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"
+        font-size="9" fill="#666666">&amp; Placement Engine</text>
+</svg>

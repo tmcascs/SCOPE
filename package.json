@@ -1,0 +1,11 @@
+{
+  "name": "scope-detection-model",
+  "version": "1.0.0",
+  "description": "SCOPE detection model reference implementation",
+  "type": "module",
+  "main": "src/model.js",
+  "scripts": {
+    "example": "node examples/query-example.mjs"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
+}

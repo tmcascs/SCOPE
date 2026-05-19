@@ -1,0 +1,580 @@
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+  :root{ 
+    /* Spacing */
+    --pad:12px; 
+    /* Colors */
+    --border:#e6e6e6; 
+    --muted:#666;
+    /* Theme colors */
+    --green:#19a355;      /* Sensors */
+    --orange:#f59e0b;     /* Fair coverage */
+    --red:#e53935;        /* Low coverage indicators */
+  }
+  
+  *{ box-sizing:border-box; }
+  
+  /* ============================================================
+     BASE LAYOUT
+     ============================================================ */
+  
+  /* Prevent layout shift from scrollbar */
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+  
+  body{ 
+    margin:0; 
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; 
+    color:#111;
+    overflow-x: hidden;
+  }
+  
+  /* Main grid layout: 60/40 split (map / controls) */
+  .wrap{ 
+    display:grid; 
+    grid-template-columns: 1.2fr 0.6fr; 
+    gap:14px; 
+    padding:14px;
+    /* Prevent layout shifts */
+    position: relative;
+    transform: translate3d(0,0,0);
+  }
+  
+  /* ============================================================
+     CARD CONTAINERS
+     ============================================================ */
+  
+  .card{
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    /* Prevent layout shifts */
+    position: relative;
+  }
+  
+  .panel{ padding:var(--pad); }
+  
+  /* ============================================================
+     WIND ROSE PANEL
+     ============================================================ */
+  
+  /* Add breathing space inside wind-rose panel */
+  #windroseCard .panel {
+    padding: 18px 20px 20px 20px;
+  }
+
+  /* Wind-rose SVG visual containment */
+  #roseWrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6mm 0 !important;
+    box-sizing: border-box;
+  }
+
+  #roseWrap svg {
+    max-width: 90%;
+    max-height: 90%;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* ============================================================
+     MAP PANEL & CONTROLS
+     ============================================================ */
+  
+  /* Ensure map and its panel have breathing space */
+  #mapCard .panel {
+    padding: 14px 18px 14px 18px;
+    position: relative;
+  }
+
+  /* Fix status bar to prevent layout shifts */
+  #status {
+    min-height: 24px;
+    line-height: 24px;
+    overflow: hidden;
+  }
+
+  /* ============================================================
+     MAP HEADER BOXES
+     ============================================================ */
+
+  /* Map header: two boxes side by side above the map */
+  #mapHeaderRow {
+    display: grid;
+    grid-template-columns: 0.7fr 1.3fr;  /* left smaller, right larger */
+    gap: 16px;
+    margin-bottom: 10px;
+    align-items: stretch;  /* Make both boxes the same height */
+    /* Prevent layout shifts */
+    position: relative;
+    will-change: auto;
+  }
+
+  .mapHeaderBox {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;  
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    /* Prevent layout shifts */
+    position: relative;
+  }
+  
+  #mapHeaderLeft {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  /* Logo styling */
+  #mapLogo {
+    max-width: 150px;
+    width: auto;
+    margin-bottom: 6px;
+    max-height: 60px;
+    height: auto;
+    display: block;
+  }
+  
+  /* Checkbox group */
+  .chkGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  
+  /* Site name input block */
+  .siteBlock {
+    margin-bottom: 4px;
+  }
+  
+  .siteBlock input {
+    width: 180px;
+  }
+
+  /* Button layout in right box */
+  #mapHeaderRight .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #siteName {
+    font-size: 13px;
+    padding: 3px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 160px;
+  }
+  
+  /* ============================================================
+     MAP CONTAINER & LEAFLET
+     ============================================================ */
+  
+  #mapWrap {
+    position: relative;
+    padding: 10px 12px 10px 12px;
+    overflow: visible;
+    height: auto;
+    /* Prevent layout shifts on first interaction */
+    contain: layout;
+    transform: translateZ(0);
+  }
+  
+  #map {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    /* Prevent unwanted touch/click behavior */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    /* Prevent layout shifts on first click */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    /* Ensure map takes full calculated height */
+    display: block;
+  }
+  
+  /* Basemap selector control (top-right corner) */
+  #basemapControl {
+    margin: 10px 10px 0 0;
+    z-index: 1000;
+  }
+  
+  #basemapControl select {
+    cursor: pointer;
+  }
+
+  /* Logo styling for PDF export */
+  #mapLogo {
+    max-width: 150px;
+    width: auto;
+    height: auto;
+    max-height: 60px;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  #mapSiteName::after {
+    content: attr(data-site);
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+  }
+  
+  #mapLogo, #mapSiteName { 
+    background: rgba(255,255,255,0.75); 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+  }
+
+  /* ============================================================
+     UTILITY CLASSES
+     ============================================================ */
+  .hstack{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .grow{ flex:1; }
+  .stack{ display:flex; flex-direction:column; gap:6px; }
+  .groupTitle{ font-weight:600; color:#333; font-size:13px; margin-bottom:6px; }
+  .btn{ padding:8px 12px; border:1px solid #cfcfcf; border-radius:10px; background:#fff; cursor:pointer; }
+  .btn:active{ transform:translateY(1px); }
+  .chk{ display:flex; align-items:center; gap:6px; font-size:13px; color:#333; }
+  .small{ color:var(--muted); font-size:12px; }
+  .windDataStatus{
+    display:inline-block;
+    margin-bottom:8px;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid #d1d5db;
+    font-size:12px;
+    font-weight:600;
+    line-height:1.2;
+    background:#f3f4f6;
+    color:#374151;
+  }
+  .windDataStatus.is-empty{
+    background:#f3f4f6;
+    color:#4b5563;
+    border-color:#d1d5db;
+  }
+  .windDataStatus.is-fetched{
+    background:#ecfdf5;
+    color:#166534;
+    border-color:#86efac;
+  }
+  .windDataStatus.is-imported{
+    background:#eff6ff;
+    color:#1d4ed8;
+    border-color:#93c5fd;
+  }
+  .windDataStatus.is-stale{
+    background:#fffbeb;
+    color:#92400e;
+    border-color:#fcd34d;
+  }
+  .wind-basis-badge {
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:600;
+    border:1px solid;
+  }
+  .wind-basis-badge.wind-basis-empty { background:#fef2f2; color:#991b1b; border-color:#fca5a5; }
+  .wind-basis-badge.wind-basis-fetched { background:#ecfdf5; color:#166534; border-color:#86efac; }
+  .wind-basis-badge.wind-basis-stale { background:#fffbeb; color:#92400e; border-color:#fcd34d; }
+  #mapWrap{ padding: var(--pad); }
+  #map{ width:100%; border-radius:10px; border:1px solid var(--border); }
+  .row label{ font-size:13px; color:#444; }
+  select,input[type="text"],input[type="date"]{ padding:6px 8px; border:1px solid #cfcfcf; border-radius:8px; }
+
+  /* ============================================================
+     LEGEND & MAP MARKERS
+     ============================================================ */
+  
+  .legend{ display:grid; grid-template-columns:auto 1fr; gap:6px 10px; align-items:center; font-size:12px; color:#333; }
+  .swatch{ width:16px; height:16px; border-radius:4px; border:1px solid #999; }
+  
+  /* Sensor marker dots */
+  .dot{ 
+    width:16px; height:16px; border-radius:50%; 
+    border:2px solid #fff; 
+    box-shadow:0 0 0 2px var(--green); 
+    background:var(--green); 
+  }
+  .dotCustom0 { width:12px; height:12px; background:#8b5cf6; border-radius:50%; border:2px solid #5b21b6; }
+  .dotCustom1 { width:12px; height:12px; background:#f97316; border-radius:50%; border:2px solid #c2410c; }
+  .pinMini {  
+    width: 10px; height: 10px; border-radius: 50%;  
+    background: #5c6773; border: 1px solid #fff;  
+    box-shadow: 0 0 0 1px #777; display: block;  
+    transform: translate(-50%, -50%);
+  }
+
+  /* ============================================================
+     WIND ROSE VISUALIZATION
+     ============================================================ */
+  
+  .imgBox{ border:1px solid var(--border); border-radius:10px; padding:6px; display:flex; justify-content:center; }
+  canvas#windRose{ width:100%; height:auto; max-width:340px; }
+
+  /* ============================================================
+     RESPONSIVE LAYOUT
+     ============================================================ */
+  
+  @media (max-width:1100px){ 
+    .wrap{ grid-template-columns: 1fr; } 
+  }
+
+
+/* ============================================================
+   VERTICAL RESIZE HANDLE
+   ============================================================ */
+
+#coordTables {
+  grid-column: 1 / -1;
+}
+
+#resizeHandle {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 8px;
+  margin: 4px 0;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#resizeHandle::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
+  transition: background 0.15s;
+}
+
+#resizeHandle:hover::after,
+#resizeHandle.dragging::after {
+  background: #9ca3af;
+}
+
+/* ============================================================
+   PRINT STYLES (PDF Export)
+   ============================================================ */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* --- hide UI and labels we don't want --- */
+  #addSensor,
+  #uploadPlanBtn, #uploadBtn, #downloadBtn, #exportPdf,
+  #fetchWind, #provider, #apiChoice,
+  #recomputeTiming, #exploreData,
+  #startDate, #endDate, #windPeriodRow, #covLegendTitle, #covLegend,
+  #status, .chk, .row, .small,
+  label[for="apiChoice"], label[for="startDate"], label[for="endDate"],
+  /* specific groups */
+  .groupTitle,                     /* “Add”, “Upload/Download” */
+  #windroseCard input[type="date"] /* Start/End fields */ {
+    display: none !important;
+  }
+  /* hide the right action box on the printed map page */
+	#mapHeaderRight { display: none !important; }
+
+
+	/* --- keep critical info visible --- */
+	#windroseCard .groupTitle,                  /* Wind rose title */
+	#windroseCard #windSpeedLegend,             /* horizontal wind speed legend */
+	#windroseCard label[for="emRate"],          /* "Emission rate" text */
+	#windroseCard select#emRate,                /* emission rate dropdown */
+	#mapLegend {                                /* new map legend box */
+	  display: block !important;
+	  visibility: visible !important;
+	  color: #000 !important;
+	  font-weight: 600;
+	}
+	#srcTitle,
+    #devTitle {
+		display: block !important;
+		font-weight: 700;
+		font-size: 13px;
+		color: #000;
+		margin-bottom: 4px;
+		margin-top: 8px;
+	  }
+	
+	/* Show map header only in PDF */
+	#mapLogo { opacity: 1 !important; display: block !important; }
+	#mapSiteName::after { content: attr(data-site); }
+
+
+  /* --- keep essentials --- */
+  #siteName, #emRate, #headerLogo, #covScore {
+    display: inline-block !important;
+    visibility: visible !important;
+    color: #000;
+    font-weight: 600;
+  }
+
+  /* --- page setup --- */
+    @page { size: A4 landscape; margin: 8mm; }
+
+	html, body {
+    width: auto !important;
+    height: auto !important;
+	  margin: 0 !important;
+	  padding: 0 !important;
+    overflow: visible !important;
+	}
+
+	.wrap {
+	  display: grid !important;
+    grid-template-columns: 68% 32% !important;
+	  align-items: start;
+    gap: 4mm !important;
+	  width: 100%;
+	  margin: 0;
+    transform: none !important;
+    break-after: page;
+    page-break-after: always;
+	}
+
+  #printModal { display: none !important; }
+  #resizeHandle { display: none !important; }
+
+  #mapCard .panel,
+  #windroseCard .panel {
+    padding: 6px !important;
+  }
+
+  #mapHeaderRow {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+  }
+
+  #mapLogo {
+    max-height: 30px !important;
+    max-width: 110px !important;
+  }
+
+  #mapWrap {
+    padding: 3px !important;
+    max-height: 114mm !important;
+  }
+
+  #map {
+    width: 100% !important;
+    height: 108mm !important;
+    max-height: 108mm !important;
+  }
+
+	/* --- Keep wind-rose contained --- */
+	#roseWrap {
+	  display: flex !important;
+	  justify-content: center !important;
+	  align-items: center !important;
+    padding: 1mm 0 !important;
+	  box-sizing: border-box !important;
+	}
+	#roseWrap svg {
+    max-width: 215px !important;
+    max-height: 215px !important;
+	  width: auto !important;
+	  height: auto !important;
+	  overflow: visible !important;
+	  margin: 0 auto !important;
+	  display: block !important;
+	}
+
+	/* --- Place legend items below the title --- */
+	#windSpeedLegend {
+	  display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+	  align-items: center !important;
+    justify-content: flex-start !important;
+    font-size: 9px !important;
+    gap: 2px 6px !important;
+    margin: 0 0 3px 0 !important;
+	}
+
+	#windSpeedLegend b {
+    display: inline !important;
+    margin: 0 4px 0 0 !important;
+	}
+
+	#windSpeedLegend div {
+	  display: inline-flex !important;
+	  align-items: center !important;
+	  gap: 8px !important;
+	}
+
+	#windSpeedLegend .swatch {
+    width: 8px !important;
+    height: 8px !important;
+	  border-radius: 2px !important;
+	  margin-right: 3px !important;
+	}
+
+  #timingMetrics {
+    margin-top: 4px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  #timingMetrics > div {
+    margin: 1px 0 !important;
+  }
+
+  #windroseCard .hstack {
+    margin-top: 6px !important;
+    gap: 8px !important;
+  }
+
+  #windroseCard .legend {
+    margin-top: 4px !important;
+    gap: 4px 8px !important;
+	}
+
+	/* Restore original working print layout (v1.0) */
+  #mapCard, #windroseCard, #mapLegend { break-inside: avoid; page-break-inside: avoid; }
+	
+	/* Hide map UI controls in print - not needed for static PDF */
+	.leaflet-control-zoom,
+	.leaflet-control,
+	#basemapControl {
+	  display: none !important;
+	}
+	
+  /* Keep selected map/wind content on page 1, and tables/charts on following pages */
+	#coordTables { page-break-before: always; }
+	#coordTables table { border-collapse: collapse; font-size: 11px; }
+	#coordTables th, #coordTables td { padding: 5px 7px; border-bottom: 1px solid #ddd; }
+
+	/* Ensure tables fully expand, kill any accidental scrollbars */
+		html, body, #coordTables, #coordTables .panel { overflow: visible !important; height: auto !important; max-height: none !important; }
+		/* Keep sources/devices side by side */
+		#coordTables .panel { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+	/* Hide browser scrollbars in print */
+	::-webkit-scrollbar { display: none !important; }
+	body { scrollbar-width: none !important; }
+}
+
+
+

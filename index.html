@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Cache buster: v1.1.5 - 2024 optimization scope fix -->
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SCOPE</title>
+
+<!-- External CSS dependencies -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- ============================================================
+       MAP CARD - Interactive Leaflet map with sensor placement
+       ============================================================ -->
+  <div class="card" id="mapCard">
+    <div class="panel">
+      
+	<!-- Map Header: Two boxes side by side above the map -->
+	<div id="mapHeaderRow">
+	  
+	  <!-- Left Header Box: Logo, site name, and display checkboxes -->
+	  <div id="mapHeaderLeft" class="mapHeaderBox">
+		<img id="mapLogo" src="scope_logo.svg" alt="SCOPE" />
+		<div class="siteBlock">
+		  <label for="siteName" class="small">Site</label>
+		  <input id="siteName" type="text" placeholder="Site name" value="Site" class="grow" style="min-width:220px; width:100%; max-width:320px;" />
+		  <button id="gotoLatLonBtn" class="btn" title="Pan map to a specific latitude/longitude">Go to Location</button>
+		</div>
+		<div class="chkGroup">
+		  <label class="chk"><input type="checkbox" id="colorByCov"/> Color sources by coverage</label>
+		  <label class="chk"><input type="checkbox" id="toggleSensorDiscs" checked/> Show sensor discs</label>
+		  <label class="chk"><input type="checkbox" id="toggleCustomDiscs" checked/> Show custom discs</label>
+		  <label class="chk"><input type="checkbox" id="minimizeSources"/> Minimize sources</label>
+		</div>
+	  </div>
+
+	  <!-- Right Header Box: Upload/download and sensor placement controls -->
+	  <div id="mapHeaderRight" class="mapHeaderBox">
+		
+		<!-- Upload / Download Section -->
+		<div class="groupTitle">Upload / Download</div>
+		<div class="row">
+		  <button id="uploadBtn" class="btn">Upload Siting</button>
+		  <button id="downloadBtn" class="btn">Save Siting</button>
+		  <button id="exportPdf" class="btn">Export PDF</button>
+		</div>
+
+		<!-- Sensors Section -->
+		<div class="groupTitle" style="margin-top:12px;">Sensors</div>
+		<div class="row">
+		  <button id="addSensor" class="btn">Add 0.3ppm Sensor</button>
+		</div>
+		<div id="customSensorSlots" style="margin-top:6px;">
+		  <!-- Slot 0 -->
+		  <div id="customSlot0" style="margin-bottom:6px;">
+		    <div id="customSlot0Empty" style="display:flex; gap:6px; align-items:center;">
+		      <button id="createCustom0" class="btn" style="font-size:12px;">+ Define Sensor 1</button>
+		    </div>
+		    <div id="customSlot0Active" style="display:none; gap:6px; align-items:center; flex-wrap:wrap;">
+		      <span id="customSlot0Label" style="font-size:12px; font-weight:600; color:#8b5cf6;"></span>
+		      <button id="placeCustom0" class="btn" style="font-size:12px;">Add</button>
+		      <button id="deleteCustom0" class="btn" style="font-size:12px; background:#dc3545; color:white;">✕</button>
+		    </div>
+		  </div>
+		  <!-- Slot 1 -->
+		  <div id="customSlot1" style="margin-bottom:6px;">
+		    <div id="customSlot1Empty" style="display:flex; gap:6px; align-items:center;">
+		      <button id="createCustom1" class="btn" style="font-size:12px;">+ Define Sensor 2</button>
+		    </div>
+		    <div id="customSlot1Active" style="display:none; gap:6px; align-items:center; flex-wrap:wrap;">
+		      <span id="customSlot1Label" style="font-size:12px; font-weight:600; color:#f97316;"></span>
+		      <button id="placeCustom1" class="btn" style="font-size:12px;">Add</button>
+		      <button id="deleteCustom1" class="btn" style="font-size:12px; background:#dc3545; color:white;">✕</button>
+		    </div>
+		  </div>
+		</div>
+
+		<!-- Sources Section -->
+		<div class="groupTitle" style="margin-top:12px;">Sources</div>
+		<div class="row">
+		  <button id="addSource" class="btn">Add Source</button>
+		</div>
+
+		<div class="row" style="margin-top:8px; align-items:center; gap:8px;">
+		  <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; user-select:none;" title="When enabled, coverage recomputes automatically while dragging sensors. Disable for smoother dragging on large sites.">
+		    <input type="checkbox" id="autoRecomputeToggle" checked style="width:14px; height:14px;">
+		    Auto-recompute on drag
+		  </label>
+		</div>
+
+	  </div>
+	</div>
+
+	<!-- Map Container with Leaflet -->
+	<div id="mapWrap">
+		<div id="map"></div>
+		
+		<!-- Basemap selector control (top-right corner of map) -->
+		<div id="basemapControl" class="leaflet-top leaflet-right">
+			<div class="leaflet-control leaflet-bar" style="background:#fff;border-radius:6px;padding:6px;">
+				<select id="basemapSelect" style="font-size:13px;border:none;outline:none;background:none;">
+				  <option value="esri" selected>Esri World</option>
+				  <option value="google">Google Maps</option>
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<!-- Map Legend -->
+	<div id="mapLegend" class="panel small" 
+		 style="margin-top:4px; font-size:11px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-start;">
+	  <b style="margin-right:6px;">Map legend:</b>
+	  <div><span style="display:inline-block;width:10px;height:10px;background:#00aa00;border-radius:50%;margin-right:4px;"></span>0.3ppm Sensor — Nominal detection range: <b id="sensorRangeLabel">150 m</b></div>
+	  <div id="legendCustom0" style="display:none;"><span style="display:inline-block;width:10px;height:10px;background:#8b5cf6;border-radius:50%;margin-right:4px;"></span><span id="legendCustom0Label">Custom Sensor 1</span> — Nominal detection range: <b id="customRangeLabel0">— m</b></div>
+	  <div id="legendCustom1" style="display:none;"><span style="display:inline-block;width:10px;height:10px;background:#f97316;border-radius:50%;margin-right:4px;"></span><span id="legendCustom1Label">Custom Sensor 2</span> — Nominal detection range: <b id="customRangeLabel1">— m</b></div>
+	</div>
+	
+	<!-- Status message bar -->
+	<div class="panel small" id="status"></div>
+
+      <!-- User interaction hint -->
+      <div class="small" style="margin:8px 0 6px;">
+        Click map to place; <b>drag</b> to move; <b>double-click</b> a device to delete.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       WIND ROSE & CONTROLS CARD - Wind data and site parameters
+       ============================================================ -->
+  <div class="card" id="windroseCard">
+    <div class="panel">
+      
+	  <!-- Wind Data Provider Controls -->
+      <div class="hstack" style="flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:8px;">
+        <div>
+          <div class="groupTitle" style="margin-bottom:8px;">Wind rose</div>
+          <div class="hstack" style="gap:10px; margin-bottom:8px;">
+            <button id="fetchWind" class="btn" style="white-space:nowrap;">Fetch (ERA5)</button>
+          </div>
+					<div id="windDataStatus" class="windDataStatus is-empty" aria-live="polite" data-state="empty">Wind data: empty</div>
+          <div class="hstack" id="windPeriodRow" style="gap:10px; margin-bottom:10px;">
+            <label>Start</label><input id="startDate" type="date"/>
+            <label>End</label><input id="endDate" type="date"/>
+          </div>
+        </div>
+      </div>
+
+	  <!-- Wind Speed Legend -->
+		<div class="legend" id="windSpeedLegend" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:8px;">
+		  <b style="margin-right:6px;">Wind speed:</b>
+		  <div class="swatch" style="background:#1f77b4"></div><div>0–2 m/s</div>
+		  <div class="swatch" style="background:#f59e0b"></div><div>2–4 m/s</div>
+		  <div class="swatch" style="background:#34a853"></div><div>4–6 m/s</div>
+		  <div class="swatch" style="background:#e53935"></div><div>≥6 m/s</div>
+		</div>
+
+      <!-- Wind Rose SVG Container -->
+      <div class="imgBox" id="roseWrap" style="width:100%;max-width:360px;margin:0 auto; overflow:visible; padding-top:12px; padding-bottom:12px;"></div>
+
+	  <!-- Emission Rate Selector -->
+	  <div style="margin-top:24px; padding-top:6px; border-top:1px solid #ddd;">
+          <label>Emission rate</label><br/>
+          <select id="emRate">
+            <option value="1">1 kg/h</option>
+            <option value="2">2 kg/h</option>
+            <option value="5" selected>5 kg/h</option>
+            <option value="10">10 kg/h</option>
+            <option value="15">15 kg/h</option>
+            <option value="100">100 kg/h</option>
+          </select>
+      </div>
+
+	  <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
+	    <button id="recomputeTiming">Recompute detection timing</button>
+
+	    <button id="exploreData" disabled>Explore Data</button>
+	  </div>
+
+	  <div id="timingMetrics" style="margin-top:12px;">
+		<div>Mean TTD: <strong><span id="meanDetect">—</span></strong></div>
+		<div>P50 TTD: <strong><span id="medianDetect">—</span></strong></div>
+		<div>P90 TTD: <strong><span id="p90Detect">—</span></strong></div>
+		<div>Sources not detected: <strong><span id="emptyCellsPct">—</span></strong></div>
+		<div style="margin-top:8px; display:flex; align-items:center; gap:8px;"><b>Coverage Score:</b> <span id="covScore">0%</span><span id="windBasisBadge" class="wind-basis-badge wind-basis-empty" title="Wind data status affects coverage accuracy">⚠ No wind data</span></div>
+	  </div>
+
+	  <!-- Coverage Legend (source marker colors) -->
+      <div class="small" id="covLegendTitle" style="margin-top:14px;"><b>Source marker colors (coverage)</b></div>
+      <div class="legend" id="covLegend" style="margin-top:6px;">
+        <div class="swatch" style="background:var(--red)"></div><div>&lt; 20% (poor)</div>
+        <div class="swatch" style="background:var(--orange)"></div><div>20–60% (fair)</div>
+        <div class="swatch" style="background:var(--green)"></div><div>&gt; 60% (good)</div>
+      </div>
+
+	  <!-- Detection Parameters Display -->
+      <div class="hstack" style="margin-top:16px; gap:12px;">
+        <div class="small">Angular tolerance: <b>20°</b></div>
+      </div>
+    </div>
+</div>
+
+<!-- Vertical resize handle between top cards and tables -->
+<div id="resizeHandle" title="Drag to resize"></div>
+
+<!-- ============================================================
+     COORDINATE TABLES - Source and sensor positions
+     ============================================================ -->
+<div class="card" id="coordTables">
+	<div class="panel" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+		<!-- Sources -->
+		<div>
+			<div class="groupTitle" id="srcTitle" style="margin-bottom:4px;">Emission sources (<span id="srcCount">0</span>)</div>
+			<table id="srcTable" style="width:100%; border-collapse:collapse; font-size:11px;">
+				<thead>
+					<tr style="background:#f6f6f6;">
+						<th align="left" style="padding:2px;">Name</th>
+						<th align="left" style="padding:2px;">Label</th>
+						<th align="right" style="padding:2px;">
+							<select id="heightUnit" style="font-size:11px; padding:1px 3px;">
+								<option value="m" selected>H (m)</option>
+								<option value="ft">H (ft)</option>
+							</select>
+						</th>
+						<th align="right" style="padding:2px;">Cov%</th>
+						<th align="right" style="padding:2px;">P50 TTD (h)</th>
+						<th align="right" style="padding:2px;">P90 TTD (h)</th>
+						<th align="right" style="padding:2px;">Nearest Sensor (m)</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+		<!-- Devices -->
+		<div>
+			<div class="groupTitle" id="devTitle" style="margin-bottom:4px;">Sensors (<span id="devCount">Total: 0</span>)</div>
+			<table id="devTable" style="width:100%; border-collapse:collapse; font-size:11px;">
+				<thead>
+					<tr style="background:#f6f6f6;">
+						<th align="left" style="padding:2px;">Type</th>
+						<th align="right" style="padding:2px;">MDL (ppm)</th>
+						<th align="right" style="padding:2px;">Lat</th>
+						<th align="right" style="padding:2px;">Lon</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<!-- (Coverage Visualizations Card removed) -->
+
+
+<!-- Go to Location Modal -->
+<div id="gotoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <h2 style="margin:0 0 16px; font-size:18px;">Go to Location</h2>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Latitude</label>
+        <input id="gotoLat" type="number" step="any" placeholder="e.g. 47.3769" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Longitude</label>
+        <input id="gotoLon" type="number" step="any" placeholder="e.g. 8.5417" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Site Name (optional)</label>
+        <input id="gotoSiteName" type="text" placeholder="Leave blank to keep current" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <p id="gotoError" style="margin:0; color:#dc3545; font-size:12px; display:none;"></p>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="gotoModalCancel" class="btn">Cancel</button>
+      <button id="gotoModalConfirm" class="btn" style="background:#19a355; color:white; font-weight:600;">Go</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print dialog modal -->
+<div id="printModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+      <img id="printModalLogo" src="" alt="SCOPE" style="height:32px; display:none;"/>
+      <h2 style="margin:0; font-size:18px;">Export PDF</h2>
+    </div>
+    <p style="margin:0 0 14px; color:#555; font-size:13px;">Select the sections to include.</p>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+      <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+        <input type="checkbox" id="printMap" checked/> Map &amp; sensor layout
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+        <input type="checkbox" id="printWindRose" checked/> Wind rose &amp; detection timing
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+        <input type="checkbox" id="printTables" checked/> Source &amp; sensor tables
+      </label>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="printModalCancel" class="btn">Cancel</button>
+      <button id="printModalConfirm" class="btn" style="background:#19a355;color:white;font-weight:600;">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Source Add/Edit Modal -->
+<div id="sourceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:380px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <h2 id="sourceModalTitle" style="margin:0 0 16px; font-size:18px;">Add Emission Source</h2>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Name / Type</label>
+        <input id="sourceModalTyp" type="text" placeholder="e.g. Compressor, Tank..." style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Label</label>
+        <input id="sourceModalLabel" type="text" placeholder="e.g. S1, Source A..." style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Height</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="sourceModalHeight" type="number" min="0" step="0.1" value="1" style="flex:1; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+          <select id="sourceModalHeightUnit" style="padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;">
+            <option value="m">m</option>
+            <option value="ft">ft</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="sourceModalDelete" class="btn" style="background:#dc3545; color:white; display:none;">Delete</button>
+      <button id="sourceModalCancel" class="btn">Cancel</button>
+      <button id="sourceModalConfirm" class="btn" style="background:#19a355; color:white; font-weight:600;">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- hidden file inputs -->
+<input id="filePlan" type="file" accept=".json,application/json" style="display:none;"/>
+<input id="fileJson" type="file" accept=".json,application/json" style="display:none;"/>
+
+<!-- Sensor Type Change Modal -->
+<div id="sensorTypeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:320px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <h2 style="margin:0 0 16px; font-size:18px;">Change Sensor Type</h2>
+    <select id="sensorTypeSelect" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:6px; font-size:14px; margin-bottom:20px;">
+      <option value="Sensor">0.3ppm Sensor</option>
+    </select>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="sensorTypeCancel" class="btn">Cancel</button>
+      <button id="sensorTypeConfirm" class="btn" style="background:#19a355; color:white; font-weight:600;">Change</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Sensor Definition Modal -->
+<div id="customSensorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <h2 id="customSensorModalTitle" style="margin:0 0 16px; font-size:18px;">Define Custom Sensor</h2>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">Sensor Name</label>
+        <input id="customSensorName" type="text" placeholder="e.g. My 2ppm Sensor" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:4px;">MDL (ppm)</label>
+        <input id="customSensorMDL" type="number" step="any" min="0.01" max="1000" placeholder="e.g. 2.0" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #ced4da; border-radius:6px; font-size:13px;"/>
+      </div>
+      <p id="customSensorError" style="margin:0; color:#dc3545; font-size:12px; display:none;"></p>
+      <p id="customSensorBuilding" style="margin:0; color:#555; font-size:12px; display:none;">Building lookup table...</p>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="customSensorModalCancel" class="btn">Cancel</button>
+      <button id="customSensorModalConfirm" class="btn" style="background:#19a355; color:white; font-weight:600;">Create</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Google Maps JS API (user-provided key) loaded asynchronously for better performance -->
+<!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&loading=async"></script> -->
+<script>
+  // Suppress Google Maps API errors in console
+  window.addEventListener('error', function(e) {
+    // Filter out Google Maps related errors - check for legitimate Google Maps domains
+    if (e.filename && (
+      e.filename.startsWith('https://maps.googleapis.com/') || 
+      e.filename.startsWith('https://maps.gstatic.com/')
+    )) {
+      e.preventDefault();
+      if (!window.__googleApiErrorShown) {
+        console.warn('[Google Maps] API error suppressed - may be due to file:// protocol restrictions');
+        window.__googleApiErrorShown = true;
+      }
+      return false;
+    }
+  }, true);
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&v=weekly&callback=initGoogleMapsCallback"
+        onerror="window.__gmFailed = true"></script>
+
+<!-- google-mutant plugin for Leaflet will be loaded dynamically by the page -->
+<script src="app.js"></script>
+</body>
+</html>
