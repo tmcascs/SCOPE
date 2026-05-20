@@ -2404,6 +2404,7 @@ document.getElementById('csvBtn').addEventListener('click', () => {
 	const recomputeBtn = document.getElementById('recomputeTiming');
 	if (recomputeBtn) {
 		recomputeBtn.addEventListener('click', () => {
+			recomputeCoverage();
 			computeDetectionEvents();
 			computeDetectionMatrix();
 			updateTimingMetrics();
